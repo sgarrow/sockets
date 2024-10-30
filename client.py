@@ -5,7 +5,6 @@ import time
 if __name__ == '__main__':
 
     # Each client will connect to the server with a new address.
-
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     # Replace with the server's address if needed.
     client_socket.connect(('localhost', 5000))
@@ -16,7 +15,7 @@ if __name__ == '__main__':
 
         message = 'Client 1 command number {}'.format(ii)
 
-        if ii == 3:
+        if ii == 5:
             message = 'close'
 
         client_socket.send(message.encode())
