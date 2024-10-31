@@ -1,6 +1,8 @@
 import socket
 import time
+import select
 #############################################################################
+
 
 if __name__ == '__main__':
 
@@ -9,19 +11,20 @@ if __name__ == '__main__':
     # Replace with the server's address if needed.
     client_socket.connect(('localhost', 5000))
 
-    for ii in range(10):
+    while True:
 
         time.sleep(1)
 
-        message = 'Client 1 command number {}'.format(ii)
+        try:
+            message = input("Enter something: ")
+            client_socket.send(message.encode())
+        except BlockingIOError:
+            pass
 
-        if ii == 5:
-            message = 'close'
-
-        client_socket.send(message.encode())
-
-        response = client_socket.recv(1024)
-        print('1 Response from server: {}'.format(response.decode()))
+        readyToRead, _, _ = select.select([client_socket], [], [], 1)
+        if readyToRead:
+            response = client_socket.recv(1024)
+            print('1 Response from server:\n{}'.format(response.decode()))
 
         if message == 'close':
             break
