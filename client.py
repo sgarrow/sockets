@@ -57,7 +57,7 @@ if __name__ == '__main__':
 
     connectType = input(' ssh, lan, internet (s,l,i) -> ')
 
-    connectDict = {'s':'localhost','l':'192.168.1.100','i':'98.37.90.37'}
+    connectDict = {'s':'localhost','l':'000.000.000.000','i':'000.000.000.000'}
     PORT = 4242
 
     clientSocket.connect((connectDict[connectType], PORT ))
