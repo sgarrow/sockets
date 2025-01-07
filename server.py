@@ -1,29 +1,67 @@
 '''
-This file contains three functions.
+STARTING THE SERVER AND THE CLIENT
+==================================
+To start the server type "python server.py" on the cmd line.
+To connect a client to the server type "python client.py" on the cmd line.
 
-Function startServer:
-Starts when "python3 server.py" is entered on the command line. Listens
-for incoming connections in an infinite loop. When a client connects, it 
-creates a new thread to handle it via the handleClient function.  When a
-client connects startServer spawns a new thread to handle that client.  The
-server can/will be shutdown when a client issues ta "ks" (kill server) cmd.
-The ks command (1) sends a message to all clients (including the the one sent
-the cmnd) that the server is shutting down so that the client will exit 
-gracefully, (2) close all client sockets and then (3) exit it's infinite loop.
+A client can be run on the same machine as the server (in a different command
+window) or on a different machine entirely.
 
-Function handleClient:
-Each handleClient is it's own thread.  Multiple clientHandler threads may be
-active simultaneously.  Receives data from the client, processes it, and
-sends a response back to the client.
+INTRODUCTION
+============
+Servers are things that respond to requests.
+Clients are things that make requests.
 
-A client can be run (1) on the the same machine as the server is running or 
-(2) on remote machine via an SSH connection (PC or phone (via the Terminus 
-App)) or (3) on a remote machine directly (not on an SSH connection).
+A WEB browser is a type of client that can connect to servers that "serve"
+WEB pages - like the Google server.
 
-Function listThreads:
-Runs in it's own thread and every 30 seconds.  It prints all the currently 
-running threads in the server's terminal window.  It's just a debug function.
-Similar functionality is available to he client via the gat cmd.
+When a web browser (a client) connects to the Google Server and sends it a
+request (e.g., send me a web page containing a bunch of links related to "I'm
+searching this") the Google Server will respond to the request by sending
+back a web page.
+
+Requests are sent in "packets" over connections called "sockets".  Included
+in the request is the IP address of the client making it - that's how the
+server knows where to send the response back to.  A given machine has one IP
+address, so if more than one instance of a web browser is open on a single
+machine how is it that the response ends up in the "right" web browser and
+not the other browser?  Port number.  
+
+CLIENT DETAILS
+==============
+Every client has a unique (ip,port) tuple.  The server tracks every client by
+(ip,port).  The server maintains a list of (ip,port) for all active clients.
+
+Each client has has two unique things associated with it - (1) a socket and
+(2) an instance (a thread) running the client's handling function
+
+When a client issues a "close" command its (ip,port) is removed from the list
+and as a result the handleClient infinite loop is exited thereby causing its
+socket to be closed and its thread to terminate.
+
+When a client issues a "ks" (kill server) not only does that client termine
+but all other clients terminate as well.  Futhermore the "ks" command causes
+the server itself (it's still waiting for other clients to possibly connect)
+to terminate.
+
+SERVER DETAILS
+==============
+Upon receipt of the ks command the server (1) sends a message to all clients
+(including the the one sent the cmd) indicating that the server is shutting
+down so that the client will exit gracefully, (2) terminates all clients and
+then finally (3) the server exits.
+
+UNEXPECTED EVENT HANDLING
+=========================
+If a user clicks the red X in the client window (closes the window) that
+client unexpectedly (from the server's viewpoint) terminates.  This is in
+contrast to the client issuing the close or ks command where the server is
+explicitly notified of the client's temination.  An unexpected termination
+results in a sort of unattached thread and socket that may continue to exist
+even when the server exits.  This situation is rectified by two try/except
+blocks in function handleClient.  To are needed because it was empirically
+determined the Window and Linux systems seem to block (waiting for a command
+from the associated client) in different places.
 '''
 
 import socket           # For creating and managing sockets.
@@ -32,7 +70,7 @@ import queue            # For Killing Server.
 import time             # For Killing Server and listThreads.
 import cmdVectors as cv # Contains vectors to "worker" functions.
 
-openSocketsLst = []     # Needed for processing the "ks" command only.
+openSocketsLst = []     # Needed for processing close and ks commands.
 #############################################################################
 
 def listThreads():
@@ -57,7 +95,7 @@ def handleClient(clientSocket, clientAddress, client2ServerCmdQ):
     # The while condition is made false by the close and ks command.
     while {'cs':clientSocket,'ca':clientAddress} in openSocketsLst:
 
-        # Recieve a message from the client.
+        # Recieve msg from the client (and look (try) for UNEXPECTED EVENT).
         try: # In case user closed client window (x) instead of by close cmd.
             data = clientSocket.recv(1024)
         except ConnectionResetError: # Windows throws this on (x).
@@ -66,7 +104,7 @@ def handleClient(clientSocket, clientAddress, client2ServerCmdQ):
             openSocketsLst.remove({'cs':clientSocket,'ca':clientAddress})
             break
         except socket.timeout: # Can't block on recv - won't be able to break
-            continue           # loop if another client has issued a ks cmd. 
+            continue           # loop if another client has issued a ks cmd.
 
         # Getting here means a command has been received.
         print('*********************************')
@@ -78,7 +116,7 @@ def handleClient(clientSocket, clientAddress, client2ServerCmdQ):
             clientSocket.send(rspStr.encode()) # sends all even if >1024.
             time.sleep(1) # Required so .send happens before socket closed.
             print(rspStr)
-            # Breaks the loop, connection closes and thread stops. 
+            # Breaks the loop, connection closes and thread stops.
             openSocketsLst.remove({'cs':clientSocket,'ca':clientAddress})
 
         # Process a "ks" message and send response back to other client(s).
@@ -99,7 +137,8 @@ def handleClient(clientSocket, clientAddress, client2ServerCmdQ):
             openSocketsLst = []
             client2ServerCmdQ.put('ks')
 
-        # Process a "standard" message and send response back to the client.
+        # Process a "standard" msg and send response back to the client,
+        # (and look (try) for UNEXPECTED EVENT).
         else:
             response = cv.vector(data.decode())
             try: # In case user closed client window (x) instead of by close cmd.
@@ -175,5 +214,4 @@ def startServer():
 #############################################################################
 
 if __name__ == '__main__':
-    #sp.sprinkler('rp')
     startServer()

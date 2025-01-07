@@ -1,8 +1,8 @@
 '''
-When a client enters a command those commands are received by function 
+When a client enters a command those commands are received by function
 handleClient in file server.py.  The command (string) is forwarded to
 function "vector" (in this file) and the appropriate "worker" function
-is then vectored to.
+is then vectored to in file cmdWorkers.py.
 '''
 
 import cmdWorkers as cw
@@ -14,14 +14,14 @@ def killSrvr(): # The ks handled directly in the handleClient func so it
 #############################################################################
 
 def getVer():
-    VER = ' v0.1.1 - 31-Dec-2024'
-    return [VER]
+    ver = ' v0.1.2 -  6-Jan-2024'
+    return [ver]
 #############################################################################
 
 def vector(inputStr): # called from handleClient. inputStr from client.
 
     # This dictionary embodies the worker function vector (and menu) info.
-    vectorDict = { 
+    vectorDict = {
     'f0' : { 'func': cw.f0,    'parm': [1,2,3], 'menu': 'Function 0'  },
     'f1' : { 'func': cw.f1,    'parm': [4,5,6], 'menu': 'Function 1'  },
     'f2' : { 'func': cw.f2,    'parm': None,    'menu': 'Function 2'  },
@@ -38,7 +38,6 @@ def vector(inputStr): # called from handleClient. inputStr from client.
         return rspStr          # Return to srvr for forwarding to clnt.
 
     choice     = inputWords[0]
-    optArgsStr = inputWords[1:]
 
     if choice in vectorDict:
         func   = vectorDict[choice]['func']
