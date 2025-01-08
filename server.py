@@ -1,68 +1,3 @@
-'''
-STARTING THE SERVER AND THE CLIENT
-==================================
-To start the server type "python server.py" on the cmd line.
-To connect a client to the server type "python client.py" on the cmd line.
-
-A client can be run on the same machine as the server (in a different command
-window) or on a different machine entirely.
-
-INTRODUCTION
-============
-Servers are things that respond to requests.
-Clients are things that make requests.
-
-A WEB browser is a type of client that can connect to servers that "serve"
-WEB pages - like the Google server.
-
-When a web browser (a client) connects to the Google Server and sends it a
-request (e.g., send me a web page containing a bunch of links related to "I'm
-searching this") the Google Server will respond to the request by sending
-back a web page.
-
-Requests are sent in "packets" over connections called "sockets".  Included
-in the request is the IP address of the client making it - that's how the
-server knows where to send the response back to.  A given machine has one IP
-address, so if more than one instance of a web browser is open on a single
-machine how is it that the response ends up in the "right" web browser and
-not the other browser?  Port number.  
-
-CLIENT DETAILS
-==============
-Every client has a unique (ip,port) tuple.  The server tracks every client by
-(ip,port).  The server maintains a list of (ip,port) for all active clients.
-
-Each client has has two unique things associated with it - (1) a socket and
-(2) an instance (a thread) running the client's handling function
-
-When a client issues a "close" command its (ip,port) is removed from the list
-and as a result the handleClient infinite loop is exited thereby causing its
-socket to be closed and its thread to terminate.
-
-When a client issues a "ks" (kill server) not only does that client termine
-but all other clients terminate as well.  Futhermore the "ks" command causes
-the server itself (it's still waiting for other clients to possibly connect)
-to terminate.
-
-SERVER DETAILS
-==============
-Upon receipt of the ks command the server (1) sends a message to all clients
-(including the the one sent the cmd) indicating that the server is shutting
-down so that the client will exit gracefully, (2) terminates all clients and
-then finally (3) the server exits.
-
-UNEXPECTED EVENT HANDLING
-=========================
-If a user clicks the red X in the client window (closes the window) that
-client unexpectedly (from the server's viewpoint) terminates.  This is in
-contrast to the client issuing the close or ks command where the server is
-explicitly notified of the client's temination.  An unexpected termination
-results in a sort of unattached thread and socket that may continue to exist
-even when the server exits.  This situation is rectified by two try/except
-blocks in function handleClient.  Two are needed because it was empirically
-determined the Window and Linux systems seem to block (waiting for a command
-from the associated client) in different places.
-'''
 
 import socket           # For creating and managing sockets.
 import threading        # For handling multiple clients concurrently.
@@ -161,7 +96,7 @@ def printSocketInfo(sSocket):
 
 def startServer():
     host = '0.0.0.0'  # Listen on all available interfaces
-    port = 4242
+    port = 
 
     serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     serverSocket.bind((host, port))
