@@ -59,7 +59,7 @@ contrast to the client issuing the close or ks command where the server is
 explicitly notified of the client's temination.  An unexpected termination
 results in a sort of unattached thread and socket that may continue to exist
 even when the server exits.  This situation is rectified by two try/except
-blocks in function handleClient.  To are needed because it was empirically
+blocks in function handleClient.  Two are needed because it was empirically
 determined the Window and Linux systems seem to block (waiting for a command
 from the associated client) in different places.
 '''
@@ -188,6 +188,7 @@ def startServer():
         else:
             if cmd == 'ks':
                 print('Server breaking in 6 sec.')
+                #threadLst = [ t.name for t in threading.enumerate() ]
                 time.sleep(6)
                 break
 
