@@ -8,9 +8,10 @@ If this file can be run on the Rpi, a PC or a phone.
 try:
     import readline         # So up arrow will recall last entered command.
     print(readline.backend) # This line just to eliminate a pylint error.
-except ModuleNotFoundError:
+except (ModuleNotFoundError, AttributeError):
     print(' exception importing readline. ok to continue.')
 
+import sys
 import socket
 import time
 import select
@@ -57,10 +58,18 @@ if __name__ == '__main__':
 
     connectType = input(' ssh, lan, internet (s,l,i) -> ')
 
+    #             {'s':'localhost','l':'lanAddr','i':'routerAddr'}
     connectDict = {'s':'localhost','l':'0.0.0.0','i':'00.00.00.00'}
     PORT = 0000
+    try:
+        clientSocket.connect((connectDict[connectType], PORT ))
+    except ConnectionRefusedError:
+        print('\n ConnectionRefusedError.  Ensure server is running.\n')
+        sys.exit()
+    except socket.timeout:
+        print('\n TimeoutError.  Ensure server is running.\n')
+        sys.exit()
 
-    clientSocket.connect((connectDict[connectType], PORT ))
     printSocketInfo(clientSocket)
 
     threadLock  = threading.Lock()
