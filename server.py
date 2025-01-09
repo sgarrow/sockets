@@ -96,7 +96,7 @@ def printSocketInfo(sSocket):
 
 def startServer():
     host = '0.0.0.0'  # Listen on all available interfaces
-    port = 
+    port = 0000
 
     serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     serverSocket.bind((host, port))
