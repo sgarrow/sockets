@@ -19,7 +19,7 @@ def listThreads():
         print(' Open Sockets: ')
         for openS in openSocketsLst:
             print('   {}'.format(openS['ca']))
-        print(' ##################')
+        print(' ##################' )
 #############################################################################
 
 def handleClient(clientSocket, clientAddress, client2ServerCmdQ):
