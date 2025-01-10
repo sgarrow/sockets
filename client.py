@@ -9,7 +9,7 @@ try:
     import readline         # So up arrow will recall last entered command.
     print(readline.backend) # This line just to eliminate a pylint error.
 except (ModuleNotFoundError, AttributeError):
-    print(' exception importing readline. ok to continue.')
+    print('\n Exception importing readline. ok to continue.\n')
 
 import sys
 import socket
