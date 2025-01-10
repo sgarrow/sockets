@@ -3,6 +3,7 @@ import socket           # For creating and managing sockets.
 import threading        # For handling multiple clients concurrently.
 import queue            # For Killing Server.
 import time             # For Killing Server and listThreads.
+import pprint     as pp
 import cmdVectors as cv # Contains vectors to "worker" functions.
 
 openSocketsLst = []     # Needed for processing close and ks commands.
@@ -36,6 +37,10 @@ def handleClient(clientSocket, clientAddress, client2ServerCmdQ):
         except ConnectionResetError: # Windows throws this on (x).
             print(' handleClient {} ConnectRstErr except in s.recv'.format(clientAddress))
             # Breaks the loop. handler/thread stops. Connection closed.
+            openSocketsLst.remove({'cs':clientSocket,'ca':clientAddress})
+            break
+        except ConnectionAbortedError: # Test-NetConnection 192.168.1.110 -p 0000 throws this
+            print(' handleClient {} ConnectAbtErr except in s.recv'.format(clientAddress))
             openSocketsLst.remove({'cs':clientSocket,'ca':clientAddress})
             break
         except socket.timeout: # Can't block on recv - won't be able to break
@@ -122,9 +127,12 @@ def startServer():
             pass
         else:
             if cmd == 'ks':
-                print('Server breaking in 6 sec.')
-                #threadLst = [ t.name for t in threading.enumerate() ]
-                time.sleep(6)
+                threadLst = [ t.name for t in threading.enumerate() ]
+                #pp.pprint(threadLst)
+                while any(el.startswith('handleClient-') for el in threadLst):
+                    threadLst = [ t.name for t in threading.enumerate() ]
+                    #pp.pprint(threadLst)
+                    time.sleep(.1)
                 break
 
 
