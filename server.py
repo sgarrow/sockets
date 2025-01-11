@@ -15,11 +15,11 @@ def listThreads():
         print(' Active Threads: ')
         for t in threading.enumerate():
             print('   {}'.format(t.name))
-        print(' ##################')
+        print(' ###################')
         print(' Open Sockets: ')
         for openS in openSocketsLst:
             print('   {}'.format(openS['ca']))
-        print(' ##################')
+        print(' ###################')
 #############################################################################
 
 def handleClient(clientSocket, clientAddress, client2ServerCmdQ):
