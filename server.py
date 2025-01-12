@@ -39,7 +39,7 @@ def handleClient(clientSocket, clientAddress, client2ServerCmdQ):
             # Breaks the loop. handler/thread stops. Connection closed.
             openSocketsLst.remove({'cs':clientSocket,'ca':clientAddress})
             break
-        except ConnectionAbortedError: # Test-NetConnection 192.168.1.110 -p 0000 throws this
+        except ConnectionAbortedError: # Test-NetConnection xxx.xxx.x.xxx -p xxxx throws this
             print(' handleClient {} ConnectAbtErr except in s.recv'.format(clientAddress))
             openSocketsLst.remove({'cs':clientSocket,'ca':clientAddress})
             break

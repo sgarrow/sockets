@@ -26,26 +26,14 @@ def printSocketInfo(cSocket):
     print( ' rcvBufSize', rcvBufSize ) # 64K
 #############################################################################
 
-def getUserInput( mainToUiQ, uiToMainQ, aLock ):
+def getUserInput( uiToMainQ, aLock ):
 
     userInput = ''
     while True:
+
         with aLock:
-            try:
-                sapState = mainToUiQ.get(timeout=.02)
-            except queue.Empty:
-                sapState = '0'
 
-            if sapState in ['0','1']:
-                if sapState == '1':
-                    prompt = '\n Enter num of dsrd Act Prof (or \'q\') -> '
-                else:
-                    prompt = '\n Choice (m=menu, q=quit) -> '
-                userInput = input( prompt )
-
-        if sapState != '0':
-            uiToMainQ.put('sap {}'.format(userInput))
-        else:
+            userInput = input( '\n Choice (m=menu, q=quit) -> '  )
             uiToMainQ.put(userInput)
 
         time.sleep(.01) # Gives 'main' a chance to run.
@@ -73,10 +61,9 @@ if __name__ == '__main__':
     printSocketInfo(clientSocket)
 
     threadLock  = threading.Lock()
-    main2UiQ    = queue.Queue()
     Ui2MainQ    = queue.Queue()
     inputThread = threading.Thread( target = getUserInput,
-                                    args   = (main2UiQ,Ui2MainQ,threadLock),
+                                    args   = (Ui2MainQ,threadLock),
                                     daemon = True )
     inputThread.start()
 
@@ -101,14 +88,6 @@ if __name__ == '__main__':
 
                     readyToRead,_, _=select.select([clientSocket],[],[],.25)
                 print('\n{}'.format(rspStr))
-
-                SAP_STE = 0
-                if 'sapState = ' in rspStr:
-                    idxStart = rspStr.index('sapState = ')
-                    idxEnd   = idxStart + len('sapState = ')
-                    SAP_STE = rspStr[idxEnd]
-                    main2UiQ.put(SAP_STE)
-                #print(' mn sapState = ', SAP_STE)
 
         if message == 'close' or 'RE: ks' in rspStr:
             break
