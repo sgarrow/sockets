@@ -31,11 +31,12 @@ def getUserInput( uiToMainQ, aLock ):
     userInput = ''
     while True:
 
-        with aLock:
-
+        with aLock:  # If I take just this out then after a command I get a 
+                     # get a prompt printed, then the rsp printed then need
+                     # an extra return to get a prompt again.
             userInput = input( '\n Choice (m=menu, q=quit) -> '  )
-            uiToMainQ.put(userInput)
 
+        uiToMainQ.put(userInput)
         time.sleep(.01) # Gives 'main' a chance to run.
 #############################################################################
 
@@ -67,6 +68,7 @@ if __name__ == '__main__':
                                     daemon = True )
     inputThread.start()
 
+    rspStr = ''
     while True:
         try:
             message = Ui2MainQ.get()
@@ -75,12 +77,13 @@ if __name__ == '__main__':
         else:
             clientSocket.send(message.encode())
 
-        with threadLock:
+        with threadLock:  # Same story.
             readyToRead, _, _ = select.select([clientSocket], [], [], .6)
             if readyToRead:
                 rspStr = ''
                 while readyToRead:
-                    response = clientSocket.recv(1024)
+                    response = clientSocket.recv(16)
+                    #response = clientSocket.recv(1024)
                     rspStr += response.decode()
 
                     if 'RE: ks' in rspStr:

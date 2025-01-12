@@ -33,7 +33,7 @@ def handleClient(clientSocket, clientAddress, client2ServerCmdQ):
 
         # Recieve msg from the client (and look (try) for UNEXPECTED EVENT).
         try: # In case user closed client window (x) instead of by close cmd.
-            data = clientSocket.recv(1024)
+            data = clientSocket.recv(1024) # Broke if any msg from client > 1024.
         except ConnectionResetError: # Windows throws this on (x).
             print(' handleClient {} ConnectRstErr except in s.recv'.format(clientAddress))
             # Breaks the loop. handler/thread stops. Connection closed.
