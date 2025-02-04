@@ -30,11 +30,11 @@ def getUserInput( uiToMainQ, aLock ):
 
     userInput = ''
     while True:
-
-        with aLock:  # If I take just this out then after a command I get a 
+        with aLock:  # If I take just this out then after a command I get a
                      # get a prompt printed, then the rsp printed then need
                      # an extra return to get a prompt again.
-            userInput = input( '\n Choice (m=menu, q=quit) -> '  )
+            prompt = '\n Choice (m=menu, q=quit) -> '
+            userInput = input( prompt )
 
         uiToMainQ.put(userInput)
         time.sleep(.01) # Gives 'main' a chance to run.
@@ -46,7 +46,6 @@ if __name__ == '__main__':
     clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     connectType = input(' ssh, lan, internet (s,l,i) -> ')
-
     #             {'s':'localhost','l':'lanAddr','i':'routerAddr'}
     connectDict = {'s':'localhost','l':'0.0.0.0','i':'00.00.00.00'}
     PORT = 0000
@@ -61,6 +60,16 @@ if __name__ == '__main__':
 
     printSocketInfo(clientSocket)
 
+    # Validate password
+    pwd = input( ' Enter password -> ')
+    clientSocket.send(pwd.encode())
+    time.sleep(.5)
+    response = clientSocket.recv(1024)
+    rspStr   = response.decode()
+    print('\n{}'.format(rspStr))
+    pwdIsOk = 'Accepted' in rspStr
+    #######
+
     threadLock  = threading.Lock()
     Ui2MainQ    = queue.Queue()
     inputThread = threading.Thread( target = getUserInput,
@@ -69,7 +78,7 @@ if __name__ == '__main__':
     inputThread.start()
 
     rspStr = ''
-    while True:
+    while pwdIsOk:
         try:
             message = Ui2MainQ.get()
         except queue.Empty:
@@ -82,8 +91,7 @@ if __name__ == '__main__':
             if readyToRead:
                 rspStr = ''
                 while readyToRead:
-                    response = clientSocket.recv(16)
-                    #response = clientSocket.recv(1024)
+                    response = clientSocket.recv(1024)
                     rspStr += response.decode()
 
                     if 'RE: ks' in rspStr:

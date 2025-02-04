@@ -14,8 +14,8 @@ def killSrvr(): # The ks handled directly in the handleClient func so it
 #############################################################################
 
 def getVer():
-    ver = ' v0.2.4 - 21-Jan-2025'
-    return [ver]
+    VER = ' v0.2.5 - 21-Jan-2025'
+    return [VER]
 #############################################################################
 
 def vector(inputStr): # called from handleClient. inputStr from client.

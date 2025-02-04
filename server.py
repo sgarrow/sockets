@@ -2,7 +2,7 @@ import socket             # For creating and managing sockets.
 import threading          # For handling multiple clients concurrently.
 import queue              # For Killing Server.
 import time               # For Killing Server and listThreads.
-import pprint       as pp
+import timeRoutines as tr
 import cmdVectors   as cv # Contains vectors to "worker" functions.
 
 openSocketsLst = []       # Needed for processing close and ks commands.
@@ -35,11 +35,12 @@ def processCloseCmd(clientSocket, clientAddress):
 def processKsCmd(clientSocket, clientAddress, client2ServerCmdQ):
     global openSocketsLst
 
+    rspStr = ''
     # Client sending ks has to be terminated first, I don't know why.
     # Also stop and running profiles so no dangling threads left behind.
-    #rspStr  = cv.vector('sp') # Can take upto 5 sec to return.
+    #rspStr += cv.vector('sp') # Can take upto 5 sec to return.
     #rspStr += '\n\n' + cv.vector('or 12345678') # Open all relays.
-    rspStr = '\n handleClient {} set loop break for self RE: ks'.\
+    rspStr += '\n handleClient {} set loop break for self RE: ks'.\
               format(clientAddress)
     clientSocket.send(rspStr.encode()) # sends all even if > 1024.
     time.sleep(1.5) # Required so .send happens before socket closed.
@@ -59,9 +60,22 @@ def processKsCmd(clientSocket, clientAddress, client2ServerCmdQ):
 
 def handleClient(clientSocket, clientAddress, client2ServerCmdQ):
     global openSocketsLst
-    print(' Accepted connection from: {}'.format(clientAddress))
-    openSocketsLst.append({'cs':clientSocket,'ca':clientAddress})
-    clientSocket.settimeout(3.0) # Sets the .recv timeout - ks processing.
+
+    # Validate password
+    data = clientSocket.recv(1024)
+    if data.decode() == 'pwd':
+        passwordIsOk = True
+        rspStr = ' Accepted connection from: {}'.format(clientAddress)
+    else:
+        passwordIsOk = False
+        rspStr = ' Rejected connection from: {}'.format(clientAddress)
+
+    print(rspStr)
+    clientSocket.send(rspStr.encode()) # sends all even if >1024.
+
+    if passwordIsOk:
+        clientSocket.settimeout(3.0)   # Sets the .recv timeout - ks processing.
+        openSocketsLst.append({'cs':clientSocket,'ca':clientAddress})
 
     # The while condition is made false by the close and ks command.
     while {'cs':clientSocket,'ca':clientAddress} in openSocketsLst:
@@ -82,7 +96,6 @@ def handleClient(clientSocket, clientAddress, client2ServerCmdQ):
             continue           # loop if another client has issued a ks cmd.
 
         # Getting here means a command has been received.
-        print('*********************************')
         print(' handleClient {} received: {}'.format(clientAddress, data.decode()))
 
         # Process a "close" message and send response back to the local client.
@@ -116,6 +129,12 @@ def printSocketInfo(sSocket):
 #############################################################################
 
 def startServer():
+    rspLst = tr.getTimeDate(False)
+    curDT  = rspLst[1]
+    cDT = '{}'.format(curDT['now'].isoformat( timespec = 'seconds' ))
+    with open('log.txt', 'a',encoding='utf-8') as f:
+        f.write( 'Server started at {} \n'.format(cDT))
+
     host = '0.0.0.0'  # Listen on all available interfaces
     port = 0000
 
@@ -169,7 +188,13 @@ def startServer():
                                                format(clientAddress) )
             cThrd.start()
     print('Server breaking.')
+    rspLst = tr.getTimeDate(False)
+    curDT  = rspLst[1]
+    cDT = '{}'.format(curDT['now'].isoformat( timespec = 'seconds' ))
+    with open('log.txt', 'a',encoding='utf-8') as f:
+        f.write( 'Server stopped at {} \n'.format(cDT))
 #############################################################################
 
 if __name__ == '__main__':
+    #cv.vector('rp')
     startServer()
